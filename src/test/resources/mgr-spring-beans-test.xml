@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xmlns:jpa="http://www.springframework.org/schema/data/jpa"
+       xmlns:aop="http://www.springframework.org/schema/aop"
+       xmlns:tx="http://www.springframework.org/schema/tx"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd http://www.springframework.org/schema/data/jpa http://www.springframework.org/schema/data/jpa/spring-jpa.xsd http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context.xsd http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop.xsd http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx.xsd"
+       default-lazy-init="true">
+
+    <!-- context -->
+    <context:annotation-config/>
+    <!-- Поддержка транзакций -->
+    <aop:aspectj-autoproxy proxy-target-class="true"/>
+    <tx:annotation-driven/>
+    <!-- jpa configuration -->
+    <jpa:repositories base-package="com.gis"/>
+    <bean id="jpaVendorAdapter" class="org.springframework.orm.jpa.vendor.HibernateJpaVendorAdapter"/>
+
+
+    <bean id="mgrDataSource" class="com.mchange.v2.c3p0.ComboPooledDataSource" destroy-method="close">
+        <property name="driverClass" value="org.h2.Driver"/>
+        <property name="jdbcUrl" value="jdbc:h2:mem:module-db;MODE=Oracle;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE;LOG=0;CACHE_SIZE=65536;UNDO_LOG=0"/>
+        <property name="minPoolSize" value="1"/>
+        <property name="maxPoolSize" value="10"/>
+        <property name="properties">
+            <props merge="true">
+                <prop key="user">sa</prop>
+                <prop key="password"></prop>
+                <prop key="oracle.net.CONNECT_TIMEOUT">120000</prop>
+                <prop key="oracle.jdbc.ReadTimeout">120000</prop>
+            </props>
+        </property>
+    </bean>
+
+    <bean id="mgrJdbcTemplate" class="org.springframework.jdbc.core.JdbcTemplate">
+        <constructor-arg ref="mgrDataSource"/>
+        <property name="fetchSize" value="${jdbcTemplate.fetchSize}"/>
+    </bean>
+    <bean id="namedParameterJdbcTemplate" class="org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate">
+        <constructor-arg name="dataSource" ref="mgrDataSource"/>
+    </bean>
+<!--    <bean id="mgrSequenceGenerator" class="com.sbt.mgr.db.mgr.SequenceGeneratorImpl">-->
+<!--        <constructor-arg name="sequenceName" value="HIBERNATE_SEQUENCE"/>-->
+<!--        <constructor-arg name="jdbcOperations" ref="mgrJdbcTemplate"/>-->
+<!--    </bean>-->
+
+<!--    <bean id="objectMapper" class="org.codehaus.jackson.map.ObjectMapper"/>-->
+<!--    <bean id="gson" class="com.google.gson.Gson"/>-->
+<!--    <bean id="freeMarkerService" class="com.sbt.mgr.freemarker.FreeMarkerServiceImpl"/>-->
+<!--    <bean id="resourceGetter" class="com.sbt.mgr.system.ResourceGetterImpl"/>-->
+
+    <bean id="entityManagerFactory" class="org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean">
+        <property name="dataSource" ref="mgrDataSource"/>
+        <property name="jpaVendorAdapter" ref="jpaVendorAdapter"/>
+        <property name="packagesToScan" value="com.gis"/>
+        <property name="jpaProperties">
+            <props>
+                <prop key="hibernate.hbm2ddl.auto">none</prop>
+                <prop key="hibernate.show_sql">true</prop>
+                <prop key="hibernate.format_sql">true</prop>
+                <prop key="hibernate.jdbc.batch_size">25</prop>
+                <prop key="hibernate.jdbc.fetch_size">${hibernate.jdbc.fetch_size}</prop>
+                <prop key="hibernate.order_inserts">true</prop>
+                <prop key="hibernate.order_updates">true</prop>
+                <prop key="hibernate.enable_lazy_load_no_trans">true</prop>
+                <prop key="hibernate.dialect">org.hibernate.dialect.Oracle10gDialect</prop>
+                <prop key="hibernate.hql.bulk_id_strategy">
+                    org.hibernate.hql.spi.id.inline.InlineIdsOrClauseBulkIdStrategy
+                </prop>
+            </props>
+        </property>
+    </bean>
+
+    <bean id="jpaTransactionManager" name="transactionManager"
+          class="org.springframework.orm.jpa.JpaTransactionManager">
+        <property name="entityManagerFactory" ref="entityManagerFactory"/>
+    </bean>
+
+    <bean class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer">
+        <property name="locations">
+            <array>
+                <value>src-db.test.properties</value>
+            </array>
+        </property>
+    </bean>
+
+    <bean id="flyway" class="org.flywaydb.core.Flyway"/>
+
+    <context:component-scan base-package="com.gis.service">
+<!--        <context:exclude-filter type="regex" expression="com.sbt.mgr.ignite.IgniteBeanConfiguration"/>-->
+<!--        <context:exclude-filter type="regex" expression="com.sbt.mgr.system.transport.TransportFactoryConfiguration"/>-->
+<!--        <context:exclude-filter type="regex" expression="com.sbt.mgr.react.service.modelmapper.*"/>-->
+    </context:component-scan>
+
+<!--    <bean id="mgrSequenceGenerator" class="com.sbt.mgr.db.mgr.SequenceGeneratorImpl">-->
+<!--        <constructor-arg name="sequenceName" value="HIBERNATE_SEQUENCE"/>-->
+<!--        <constructor-arg name="jdbcOperations" ref="mgrJdbcTemplate"/>-->
+<!--    </bean>-->
+
+</beans>

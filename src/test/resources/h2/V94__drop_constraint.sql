@@ -1,0 +1,10 @@
+
+CREATE SEQUENCE hibernate_sequence START WITH 1000 INCREMENT BY 1 CACHE 2000;
+CREATE TABLE USER  (
+    id                  NUMBER NOT NULL,
+    NAME   VARCHAR2 (30 CHAR),
+    ADDRESS   VARCHAR2 (30 CHAR)
+  );
+
+INSERT INTO USER (id, name, ADDRESS)
+VALUES (1, 'source', 'scheme');
